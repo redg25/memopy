@@ -1,6 +1,7 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from widgets import card
 
 class GridPageWidget(BoxLayout):
 
@@ -23,9 +24,12 @@ class GridPageWidget(BoxLayout):
             h_layout = BoxLayout(orientation='vertical')
             for col in range(m_grid):
                 lbl = Label(text="regis")
-                button_img = Button(background_color=[0, 0, 0, 0],text='REGIS')
-                button_img.disabled = True
-                h_layout.add_widget(lbl)
+                button_img = card()
+                button_img.no_card()
+                #button_img.with_image()
+                # button_img = Button(background_color=[0, 0, 0, 0],text='REGIS')
+                # button_img.disabled = True
+                h_layout.add_widget(button_img)
             self.add_widget(h_layout)
 
 
