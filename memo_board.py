@@ -23,12 +23,8 @@ class GridPageWidget(BoxLayout):
         for row in range(m_grid):
             h_layout = BoxLayout(orientation='vertical')
             for col in range(m_grid):
-                lbl = Label(text="regis")
                 button_img = card()
                 button_img.no_card()
-                #button_img.with_image()
-                # button_img = Button(background_color=[0, 0, 0, 0],text='REGIS')
-                # button_img.disabled = True
                 h_layout.add_widget(button_img)
             self.add_widget(h_layout)
 
