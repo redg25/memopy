@@ -4,7 +4,6 @@ from memo_board import GridPageWidget
 
 class MainApp(App):
 
-
     def build(self):
         root = GridPageWidget()
         return root
