@@ -16,12 +16,13 @@ class card(Button):
     def no_card(self):
         self.background_color = [0, 0, 0, 0]
         self.text = "No card"
-        # self.bind(on_release=self.with_image)
+
         self.disabled = True
 
     def card_face_down(self,):
         self.background_color = [0, 1, 0, 1]
         self.text = "Push me"
+        self.bind(on_release=self.card_face_up)
         self.disabled = False
 
     def card_face_up(self,dt):
