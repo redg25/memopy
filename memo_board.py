@@ -6,15 +6,32 @@ from kivy.utils import platform
 import os, shutil, random
 from PIL import Image,ExifTags
 
+class GamePage(BoxLayout):
+
+    def __init__(self,players=2):
+        super().__init__()
+        h_layout = BoxLayout(orientation='vertical')
+        grid = GridPageWidget(pairs=5)
+        h_layout.add_widget(grid)
+        scores_layout = BoxLayout(orientation='horizontal')
+        for player in range(players):
+            player_lbl = Label(text= f'Player {str(player+1)}')
+            score_lbl = Label(text= '0')
+            scores_layout.add_widget(player_lbl)
+            scores_layout.add_widget(score_lbl)
+        h_layout.add_widget(scores_layout)
+        self.add_widget(h_layout)
+
 class GridPageWidget(BoxLayout):
 
-    def __init__(self,pairs=5):
+    def __init__(self,pairs=4):
         super().__init__()
         self.game = Game()
         self.pairs = pairs
         self.grid_size = pairs * 2
         self.pool_of_cards = []
         self.draw_grid()
+        
 
 
     def select_pictures(self):
