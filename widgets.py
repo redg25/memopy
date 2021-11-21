@@ -5,25 +5,35 @@ from kivy.uix.popup import Popup
 from PIL import Image as PilImg
 from typing import Optional
 
+
 class Game:
     
-    def __init__(self, players: int = 2):
+    def __init__(self, root, pairs: int, players: int):
+        self.root = root
         self.players = players
         self.cards: Card = []
         self.turn = Turn()
-        self.scores = {'1': 0, '2': 0}
-        self.pairs = None
+        self.scores = {'1': {'score':0,'widget':None}, '2': {'score':0,'widget':None}}
+        self.pairs_found = 0
+        self.pairs = pairs
 
     def set_next_turn(self):
         # reset turn
         self.turn.first_card = None
         self.turn.second_card = None
         self.turn.card_returned = 0
+        player = str(self.turn.player)
         # player found a pair, adds one the player's score
         if self.turn.pair_found:
-            self.scores[str(self.turn.player)] += 1
+            self.pairs_found +=1
+            self.scores[player]['score'] += 1
+            self.scores[player]['widget'].text = str(self.scores[player]['score'])
             print(self.scores)
             self.turn.pair_found = False
+            if self.pairs_found == self.pairs:
+                self.scores[player]['widget'].text = "I win"
+                self.reset_game()
+                
         # player 1 fails to find a pair
         elif self.turn.player == 1 and self.players ==2:
             self.turn.player = 2
