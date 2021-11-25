@@ -1,0 +1,61 @@
+# main.kv
+
+# note: this time there are no ids at all
+<FirstPageWidget>:
+    id: first_page
+    orientation: "vertical"
+    Label:
+        size_hint_y: 0.2
+        text: 'Select picture folder'
+    FileChooserListView:
+        id: folderchooser
+        size_hint_y: 0.6
+        dirselect: True
+        path: root.get_default_path()
+    BoxLayout:
+        size_hint_y: 0.2
+        orientation: "horizontal"
+        Button:
+            text: 'Save folder'
+            on_release: root.update_folder_label(folderpath,folderchooser.selection)
+        Label:
+            id: folderpath
+            text: root.get_saved_folder()[1]
+    Label:
+        size_hint_y: 0.2
+        text: 'Number of pairs'
+    BoxLayout:
+        size_hint_y: 0.3
+        orientation: "horizontal"
+        ToggleButton:
+            text: '8'
+            group: 'pairs'
+            state: 'down'
+        ToggleButton:
+            text: '12'
+            group: 'pairs'
+        ToggleButton:
+            text: '16'
+            group: 'pairs'
+        ToggleButton:
+            text: '24'
+            group: 'pairs'
+    Label:
+        size_hint_y: 0.2
+        text: 'Type of game'
+    BoxLayout:
+        orientation: "horizontal"
+        size_hint_y: 0.3
+        ToggleButton:
+            text: '1P'
+            group: 'players'
+            state: 'down'
+        ToggleButton:
+            text: '2P'
+            group: 'players'
+    Button:
+        text: 'Play'
+        size_hint_y: 0.3
+        on_release: root.game_parameters()
+
+
