@@ -2,7 +2,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
-#from widgets import Card, Turn, Game
+from kivy.uix.filechooser import FileChooserListView
 from kivy.utils import platform
 from kivy.clock import Clock
 from kivy.uix.progressbar import ProgressBar
@@ -15,11 +15,10 @@ from kivy.uix.popup import Popup
 from kivy.lang import Builder
 from PIL import Image as PilImg
 from typing import Optional
+import json
 
-root = None
 
 class FirstPageWidget(BoxLayout):
-
 
     def game_parameters(self):
 
@@ -27,14 +26,41 @@ class FirstPageWidget(BoxLayout):
             for choice in choices:
                 if choice.state == 'down':
                     return choice.text
-        global root
-        root = self
+
         pairs = int(toggle_choice(self.children[3].children))
         if toggle_choice(self.children[1].children) == '1P':
             nb_player = 1
         else: nb_player = 2
-        self.clear_widgets()
-        self.add_widget(GamePage(nb_player, pairs))
+        root.clear_widgets()
+        root.add_widget(GamePage(nb_player, pairs))
+
+    def get_default_path(self):
+        self.path = os.path.expanduser("~/Desktop")
+        return self.path
+
+    def get_saved_folder(self):
+        with open('config.json','r') as f:
+            data = json.load(f)
+        folder_path = data['settings']['folder_path']
+        folder_name = data['settings']['folder_name']
+        return folder_path, folder_name
+
+    def update_folder_label(self, widget, text):
+        with open('config.json','r') as f:
+            data = json.load(f)
+        folder_path = text[0]
+        folder_name = text[0].split('\\')[-1]
+        data['settings']['folder_path']=folder_path
+        data['settings']['folder_name']=folder_name
+        with open('config.json','w') as f:
+            json.dump(data, f)
+        if os.path.isdir(folder_path):
+            widget.text = folder_name
+            widget.color = [1,1,1,1]
+        else:
+            widget.text = 'Please select a directory'
+            widget.color = [1,0,0,1]
+
 
 
 class GamePage(BoxLayout):
@@ -68,10 +94,6 @@ class GridPageWidget(BoxLayout):
         self.grid_size = pairs * 2
         self.pool_of_cards = []
         self.select_pictures()
-        #self.draw_grid()
-
-
-
 
     def select_pictures(self):
         if platform == 'android':
@@ -102,13 +124,11 @@ class GridPageWidget(BoxLayout):
             pick = random.choice(pic_folder)
             if pick not in self.pool_of_cards and pick[-4:].lower()=='.jpg':
                 self.pool_of_cards.append(pick)
-                self.pool_of_cards.append(pick)
-                #self.resize_and_save_pictures(pick)
                 nb_of_pairs_created += 1
         self.pb = progress_bar_func(self.pairs,'Please wait. Pictures are being selected and resized',self.resize_and_save_pictures)
 
     def resize_and_save_pictures(self, dt):
-            if self.i<self.pairs*2:
+            if self.i<self.pairs:
                 print(f'saving {self.pool_of_cards[self.i]}...')
                 img = Image.open(self.folder + self.pool_of_cards[self.i])
                 # Get Image orientation
@@ -128,9 +148,10 @@ class GridPageWidget(BoxLayout):
                 self.pb.progress_bar.value += 1
 
                 self.pb.trigger()
-                self.i += 2
+                self.i += 1
             else:
                 self.pb.popup.dismiss()
+                self.pool_of_cards = [val for val in self.pool_of_cards for _ in (0, 1)]
                 self.draw_grid()
 
 
@@ -147,7 +168,7 @@ class GridPageWidget(BoxLayout):
         max_grid = [int(grids[i+1] ** 0.5) for i, x in enumerate(grids)
                     if (self.grid_size > x and self.grid_size <= grids[i+1])][0]
 
-        cards = []
+        #cards = []
 
         for row in range(max_grid):
             h_layout = BoxLayout(orientation='vertical')
@@ -159,12 +180,12 @@ class GridPageWidget(BoxLayout):
                     #button_img.no_card()
                     #button_img.pair_found()
                     button_img.card_face_down()
-                    cards.append(button_img)
+                    #cards.append(button_img)
                     h_layout.add_widget(button_img)
                 except:
                     button_img = Card(None, self.game)
                     button_img.no_card()
-                    self.game.cards.append(button_img)
+                    #self.game.cards.append(button_img)
                     h_layout.add_widget(button_img)
             self.add_widget(h_layout)
             turn = Turn()
@@ -187,7 +208,7 @@ class Game:
 
     def __init__(self,  pairs: int, players: int):
         self.players = players
-        self.cards: Card = []
+        # self.cards: Card = []
         self.turn = Turn()
         self.scores = {'1': {'score':0,'widget':None}, '2': {'score':0,'widget':None}}
         self.pairs_found = 0
