@@ -6,6 +6,7 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.utils import platform
 from kivy.clock import Clock
 from kivy.uix.progressbar import ProgressBar
+from kivy.graphics import Color, Rectangle
 import os, shutil, random
 from PIL import Image,ExifTags
 from kivy.uix.button import Button
@@ -34,6 +35,7 @@ class FirstPageWidget(BoxLayout):
         root.clear_widgets()
         root.add_widget(GamePage(nb_player, pairs))
 
+
     def get_default_path(self):
         self.path = os.path.expanduser("~/Desktop")
         return self.path
@@ -48,10 +50,10 @@ class FirstPageWidget(BoxLayout):
     def update_folder_label(self, widget, text):
         with open('config.json','r') as f:
             data = json.load(f)
-        folder_path = text[0]
+        folder_path = f'{text[0]}\\'
         folder_name = text[0].split('\\')[-1]
-        data['settings']['folder_path']=folder_path
-        data['settings']['folder_name']=folder_name
+        data['settings']['folder_path'] = folder_path
+        data['settings']['folder_name'] = folder_name
         with open('config.json','w') as f:
             json.dump(data, f)
         if os.path.isdir(folder_path):
@@ -74,14 +76,19 @@ class GamePage(BoxLayout):
 
         h_layout.add_widget(grid)
         scores_layout = BoxLayout(orientation='horizontal',size_hint_y = 0.2)
-        for player in range(players):
-            player_lbl = Label(text= f'Player {str(player+1)}')
+        for player in range(1,players+1):
+            player_lbl = Label(text= f'Player {str(player)}')
             score_lbl = Label(text= '0')
-            self.game.scores[str(player+1)]['widget']=score_lbl
+            self.game.scores[str(player)]['widget'] = score_lbl
+            self.game.scores[str(player)]['label'] = player_lbl
             scores_layout.add_widget(player_lbl)
             scores_layout.add_widget(score_lbl)
         h_layout.add_widget(scores_layout)
         self.add_widget(h_layout)
+        if players == 2:
+            self.game.scores['1']['label'].color = [0,0.6,0,1]
+            self.game.scores['1']['label'].font_size = 20
+
 
 
 
@@ -99,7 +106,7 @@ class GridPageWidget(BoxLayout):
         if platform == 'android':
             self.folder = '/sdcard/DCIM/Camera/'
         else:
-            self.folder = 'C:\\Users\\regis\\My_folder\\Pictures\\Camera Back up 20201224\\'
+            self.folder = root.get_saved_folder()[0]
 
         for filename in os.listdir('images_resized'):
             file_path = os.path.join('images_resized', filename)
@@ -210,7 +217,7 @@ class Game:
         self.players = players
         # self.cards: Card = []
         self.turn = Turn()
-        self.scores = {'1': {'score':0,'widget':None}, '2': {'score':0,'widget':None}}
+        self.scores = {'1': {'score':0,'widget':None,'label':None}, '2': {'score':0,'widget':None,'label':None}}
         self.pairs_found = 0
         self.pairs = pairs
 
@@ -241,6 +248,14 @@ class Game:
             self.turn.player = 1
             print (f'change of player, now {str(self.turn.player)}')
             print(self.scores)
+        if self.players ==2:
+            for p in self.scores:
+                if p == str(self.turn.player):
+                    self.scores[p]['label'].color = [0,0.6,0,1]
+                    self.scores[p]['label'].font_size = 20
+                else:
+                    self.scores[p]['label'].color = [1,1,1,1]
+                    self.scores[p]['label'].font_size = 16
 
 
 def end_screen(winner):
