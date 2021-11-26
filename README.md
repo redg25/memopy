@@ -9,3 +9,6 @@ Note: The folder selected will be used by default the next time you run the game
 Select the number of pairs and number of players then click play.
 
 The GUI is using the kivy framework.
+
+![alt text](https://github.com/redg25/memopy/blob/master/Capture_memopy.PNG?raw=true)
+![alt text](https://github.com/redg25/memopy/blob/master/Memopy_in_game.PNG?raw=true)
