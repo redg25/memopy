@@ -21,19 +21,22 @@ import json
 
 class FirstPageWidget(BoxLayout):
 
-    def game_parameters(self):
+    def game_parameters(self,folder_path):
 
         def toggle_choice(choices):
             for choice in choices:
                 if choice.state == 'down':
                     return choice.text
-
-        pairs = int(toggle_choice(self.children[3].children))
-        if toggle_choice(self.children[1].children) == '1P':
-            nb_player = 1
-        else: nb_player = 2
-        root.clear_widgets()
-        root.add_widget(GamePage(nb_player, pairs))
+        if root.get_saved_folder()[2]:
+            pairs = int(toggle_choice(self.children[3].children))
+            if toggle_choice(self.children[1].children) == '1P':
+                nb_player = 1
+            else: nb_player = 2
+            root.clear_widgets()
+            root.add_widget(GamePage(nb_player, pairs))
+        else:
+            folder_path.text = "Please select a directory"
+            folder_path.color = [1,0,0,1]
 
 
     def get_default_path(self):
@@ -45,7 +48,11 @@ class FirstPageWidget(BoxLayout):
             data = json.load(f)
         folder_path = data['settings']['folder_path']
         folder_name = data['settings']['folder_name']
-        return folder_path, folder_name
+        if folder_name != "" and folder_name != "Please select a directory":
+            valid_folder = True
+        else:
+            valid_folder = False
+        return folder_path, folder_name, valid_folder
 
     def update_folder_label(self, widget, text):
         with open('config.json','r') as f:
@@ -62,6 +69,11 @@ class FirstPageWidget(BoxLayout):
         else:
             widget.text = 'Please select a directory'
             widget.color = [1,0,0,1]
+            data['settings']['folder_path'] = ''
+            data['settings']['folder_name'] = ''
+            with open('config.json','w') as f:
+                json.dump(data, f)
+
 
 
 
@@ -151,7 +163,6 @@ class GridPageWidget(BoxLayout):
                             print(f'{self.pool_of_cards[self.i]} is vertical')
                             img = img.transpose(Image.ROTATE_90)
                 img.save("images_resized/" + self.pool_of_cards[self.i], quality=95)
-                # print(f'{[self.image_selection[self.i]]} is saved')
                 self.pb.progress_bar.value += 1
 
                 self.pb.trigger()
@@ -169,13 +180,10 @@ class GridPageWidget(BoxLayout):
         Ex: If 10 pairs, we need 20 cards that will fit in a 25 squares grid.
         """
 
-        #self.select_pictures()
-
         grids = [4, 9, 16, 25, 36, 49, 64]
         max_grid = [int(grids[i+1] ** 0.5) for i, x in enumerate(grids)
                     if (self.grid_size > x and self.grid_size <= grids[i+1])][0]
 
-        #cards = []
 
         for row in range(max_grid):
             h_layout = BoxLayout(orientation='vertical')
@@ -184,20 +192,15 @@ class GridPageWidget(BoxLayout):
                     i = random.randrange(len(self.pool_of_cards))
                     img = self.pool_of_cards.pop(i)
                     button_img = Card(img, self.game)
-                    #button_img.no_card()
-                    #button_img.pair_found()
                     button_img.card_face_down()
-                    #cards.append(button_img)
                     h_layout.add_widget(button_img)
                 except:
                     button_img = Card(None, self.game)
                     button_img.no_card()
-                    #self.game.cards.append(button_img)
                     h_layout.add_widget(button_img)
             self.add_widget(h_layout)
             turn = Turn()
-        # for mame in cards:
-        #     print (mame)
+
 
 class progress_bar_func():
 
@@ -231,13 +234,14 @@ class Game:
         # player found a pair, adds one the player's score
         if self.turn.pair_found:
             self.pairs_found +=1
-            self.scores[player]['score'] += 1
-            self.scores[player]['widget'].text = str(self.scores[player]['score'])
-            print(self.scores)
+            if self.players == 2:
+                self.scores[player]['score'] += 1
+                self.scores[player]['widget'].text = str(self.scores[player]['score'])
+                print(self.scores)
             self.turn.pair_found = False
             if self.pairs_found == self.pairs:
                 root.clear_widgets()
-                root.add_widget(end_screen(player))
+                root.add_widget(end_screen(player,self.scores,self.players))
         # player 1 fails to find a pair
         elif self.turn.player == 1 and self.players ==2:
             self.turn.player = 2
@@ -248,6 +252,7 @@ class Game:
             self.turn.player = 1
             print (f'change of player, now {str(self.turn.player)}')
             print(self.scores)
+
         if self.players ==2:
             for p in self.scores:
                 if p == str(self.turn.player):
@@ -256,17 +261,34 @@ class Game:
                 else:
                     self.scores[p]['label'].color = [1,1,1,1]
                     self.scores[p]['label'].font_size = 16
+        else:
+            self.scores['1']['score'] += 1
+            self.scores['1']['widget'].text = str(self.scores[player]['score'])
 
 
-def end_screen(winner):
+def end_screen(winner,scores,players):
     h_layout = BoxLayout(orientation='vertical')
-    winner = Label(text=f'Player {winner} wins the game')
+    score_p1 = scores['1']['score']
+    score_p2 = scores['2']['score']
+    both_scores = sorted([score_p1,score_p2], reverse=True)
+    both_scores = [str(x) for x in both_scores]
+    both_scores = (" to ").join(both_scores)
+    #Set message depending on nb of players and result
+    if players == 1:
+        message = f'You finished in {str(score_p1)} tries'
+    else:
+        if score_p1 == score_p2:
+            message = f'Draw!!! {score_p1} each'
+        else:
+            message = f'Player {winner} wins the game {both_scores}'
+    winner_lbl = Label(text=message, font_size = 24)
+
     w_layout = BoxLayout(orientation='horizontal')
     btn_new_game = Button(text='New Game', on_release=new_game)
     btn_close_game = Button(text='Close', on_release=app.stop)
     w_layout.add_widget(btn_new_game)
     w_layout.add_widget(btn_close_game)
-    h_layout.add_widget(winner)
+    h_layout.add_widget(winner_lbl)
     h_layout.add_widget(w_layout)
     return h_layout
 
@@ -373,8 +395,6 @@ class Turn:
         self.first_card: Card = None
         self.second_card: Card = None
         self.pair_found = False
-
-
 
 
 
